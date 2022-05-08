@@ -19,7 +19,7 @@ typedef struct {
 } SJIJKMediaPlaybackFinishedInfo;
 
 
-@interface SJIJKMediaPlayer ()
+@interface SJIJKMediaPlayer ()<IJKMediaNativeInvokeDelegate>
 @property (nonatomic, strong, nullable) NSError *error;
 @property (nonatomic) SJIJKMediaPlaybackFinishedInfo playbackFinishedInfo;
 @property (nonatomic, nullable) SJWaitingReason reasonForWaitingToPlay;
@@ -75,22 +75,32 @@ typedef struct {
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_naturalSizeAvailable:) name:IJKMPMovieNaturalSizeAvailableNotification object:self];
         
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_didSeekComplete:) name:IJKMPMoviePlayerDidSeekCompleteNotification object:self];
-        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_seekRenderingStart:) name:IJKMPMoviePlayerSeekAudioStartNotification object:self];
-        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_seekRenderingStart:) name:IJKMPMoviePlayerSeekVideoStartNotification object:self];
+//        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_seekRenderingStart:) name:IJKMPMoviePlayerSeekAudioStartNotification object:self];
+//        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_seekRenderingStart:) name:IJKMPMoviePlayerSeekVideoStartNotification object:self];
 
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_firstVideoFrameRendered:) name:IJKMPMoviePlayerFirstVideoFrameRenderedNotification object:self];
         
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_audioSessionInterruption:) name:AVAudioSessionInterruptionNotification object:nil];
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_audioSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:nil];
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_willEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
-        
+        [self setNativeInvokeDelegate:self];
+
         [self setPauseInBackground:NO];
         self.shouldAutoplay = NO;
         self.assetStatus = SJAssetStatusPreparing;
         [self prepareToPlay];
+        
     }
     return self;
 }
+
+- (int)invoke:(IJKMediaEvent)event attributes:(NSDictionary *)attributes {
+    if (event == IJKMediaEvent_DidHttpSeek) {
+        [self _seekRenderingStart:nil];
+    }
+    return 0;
+}
+
 
 - (void)dealloc {
 #ifdef DEBUG
